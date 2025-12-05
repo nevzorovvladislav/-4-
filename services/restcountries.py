@@ -13,12 +13,10 @@ BUILTIN_DATA_FILE = "builtin_countries.json"
 def get_builtin_countries():
     """Загружает встроенные страны из JSON файла."""
     try:
-        # Если файл существует в текущей директории
         if os.path.exists(BUILTIN_DATA_FILE):
             with open(BUILTIN_DATA_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
         else:
-            # Альтернативно, файл может быть рядом с модулем
             module_dir = os.path.dirname(os.path.abspath(__file__))
             file_path = os.path.join(module_dir, BUILTIN_DATA_FILE)
             if os.path.exists(file_path):

@@ -2,7 +2,6 @@ import logging
 import sys
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-# Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO,
@@ -14,21 +13,18 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Импорт конфигурации
 try:
     from config import BOT_TOKEN
 except ImportError:
     logger.error("Ошибка загрузки конфигурации")
     sys.exit(1)
 
-# Импорт обработчиков
 try:
     from handlers.commands import (
         start, help_cmd, info_cmd, compare_cmd,
         top_cmd, setpref_cmd, myprefs_cmd, handle_text,
         random_cmd
     )
-    # ИСПРАВЛЕНИЕ: Заменено 'handlers.errors' на 'handlers.error'
     from handlers.errors import error_handler
 except ImportError as e:
     logger.error(f"Ошибка загрузки обработчиков: {e}")
@@ -46,11 +42,9 @@ def main():
         return
 
     try:
-        # Создаем Updater
         updater = Updater(BOT_TOKEN, use_context=True)
         dispatcher = updater.dispatcher
 
-        # Регистрируем обработчики
         dispatcher.add_handler(CommandHandler("start", start))
         dispatcher.add_handler(CommandHandler("help", help_cmd))
         dispatcher.add_handler(CommandHandler("info", info_cmd))
@@ -61,10 +55,8 @@ def main():
         dispatcher.add_handler(CommandHandler("myprefs", myprefs_cmd))
         dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
 
-        # Обработчик ошибок
         dispatcher.add_error_handler(error_handler)
 
-        # Запускаем
         logger.info("Бот запущен!")
         print("=" * 50)
         print("Бот запущен!")

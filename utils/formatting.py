@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def format_country_info(data: Dict) -> str:
-    """Форматирует данные страны в читаемый вид для Telegram."""
     try:
         name = data.get("name", {}).get("common", "—")
         capital = ", ".join(data.get("capital", ["—"]))
@@ -28,7 +27,6 @@ def format_country_info(data: Dict) -> str:
         # Флаг
         flag = data.get("flags", {}).get("png", "")
 
-        # Форматируем числа (разделяем нижним подчеркиванием для читаемости)
         pop_str = f"{population:,}".replace(",", "_") if population != "—" else "—"
         area_str = f"{area:,}".replace(",", "_") if area != "—" else "—"
 
@@ -48,25 +46,21 @@ def format_country_info(data: Dict) -> str:
 
 
 def build_top_df(all_countries: List[Dict]) -> pd.DataFrame:
-    """Создает DataFrame из списка стран для расчета топа."""
     rows = []
     if not all_countries:
         return pd.DataFrame(columns=["name", "population", "area"])
 
     for c in all_countries:
         try:
-            # Получаем имя страны
             name_data = c.get("name", {})
             name = name_data.get("common", "Unknown") if isinstance(name_data, dict) else str(name_data)
 
-            # Получаем и проверяем население
             population = c.get("population")
             try:
                 population = int(population) if population is not None else 0
             except (ValueError, TypeError):
                 population = 0
 
-            # Получаем и проверяем площадь
             area = c.get("area")
             try:
                 area = float(area) if area is not None else 0.0
