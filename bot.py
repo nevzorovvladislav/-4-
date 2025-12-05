@@ -14,6 +14,7 @@ from handlers.commands import (
 )
 from handlers.errors import error_handler
 
+# Детальное логирование для отладки
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -25,33 +26,38 @@ def main():
     """Запуск бота."""
     logger.info("Запуск бота...")
 
-    # Создаем Updater и передаем ему токен бота
-    updater = Updater(BOT_TOKEN)
+    try:
+        # Создаем Updater и передаем ему токен бота
+        updater = Updater(BOT_TOKEN, use_context=True)
 
-    # Получаем диспетчер для регистрации обработчиков
-    dispatcher = updater.dispatcher
+        # Получаем диспетчер для регистрации обработчиков
+        dispatcher = updater.dispatcher
 
-    # Регистрируем обработчики команд
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_cmd))
-    dispatcher.add_handler(CommandHandler("info", info_cmd))
-    dispatcher.add_handler(CommandHandler("compare", compare_cmd))
-    dispatcher.add_handler(CommandHandler("top", top_cmd))
-    dispatcher.add_handler(CommandHandler("setpref", setpref_cmd))
-    dispatcher.add_handler(CommandHandler("myprefs", myprefs_cmd))
+        # Регистрируем обработчики команд
+        dispatcher.add_handler(CommandHandler("start", start))
+        dispatcher.add_handler(CommandHandler("help", help_cmd))
+        dispatcher.add_handler(CommandHandler("info", info_cmd))
+        dispatcher.add_handler(CommandHandler("compare", compare_cmd))
+        dispatcher.add_handler(CommandHandler("top", top_cmd))
+        dispatcher.add_handler(CommandHandler("setpref", setpref_cmd))
+        dispatcher.add_handler(CommandHandler("myprefs", myprefs_cmd))
 
-    # Регистрируем обработчик текстовых сообщений (кнопки)
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
+        # Регистрируем обработчик текстовых сообщений (кнопки)
+        dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_text))
 
-    # Регистрируем обработчик ошибок
-    dispatcher.add_error_handler(error_handler)
+        # Регистрируем обработчик ошибок
+        dispatcher.add_error_handler(error_handler)
 
-    # Запускаем бота
-    logger.info("Бот запущен и готов к работе!")
-    updater.start_polling()
+        # Запускаем бота
+        logger.info("Бот запущен и готов к работе!")
+        updater.start_polling()
 
-    # Запускаем бота до тех пор, пока пользователь не нажмет Ctrl+C
-    updater.idle()
+        # Запускаем бота до тех пор, пока пользователь не нажмет Ctrl+C
+        updater.idle()
+
+    except Exception as e:
+        logger.error(f"Ошибка при запуске бота: {e}")
+        raise
 
 
 if __name__ == "__main__":

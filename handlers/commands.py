@@ -192,15 +192,32 @@ def top_cmd(update: Update, context: CallbackContext) -> None:
         return
 
     update.message.chat.send_action("typing")
+
+    # Получаем список стран
     all_c = fetch_all_countries()
+
     if not all_c:
+        logger.error("Не удалось получить список стран. fetch_all_countries вернул None или пустой список")
         update.message.reply_text(
-            "Не удалось получить список стран.",
+            "⚠️ Не удалось получить данные из базы стран.\n"
+            "Возможно, сервис временно недоступен.\n"
+            "Попробуйте позже или используйте другие команды.",
             reply_markup=get_main_keyboard()
         )
         return
 
+    logger.info(f"Получено {len(all_c)} стран для формирования топа")
+
+    # Строим DataFrame
     df = build_top_df(all_c)
+
+    if df.empty:
+        update.message.reply_text(
+            "Не удалось обработать данные стран.",
+            reply_markup=get_main_keyboard()
+        )
+        return
+
     df = df.sort_values(by=metric, ascending=False).head(n)
 
     metric_name = "населению" if metric == "population" else "площади"

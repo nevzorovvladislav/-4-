@@ -37,7 +37,7 @@ def format_country_info(data: Dict) -> str:
         }
         region_emoji = region_emojis.get(region, "📍")
 
-        # УБРАЛИ ВСЕ ЗВЕЗДОЧКИ (*) И MARKDOWN РАЗМЕТКУ
+        # УБИРАЕМ ВСЕ ЗВЕЗДОЧКИ И MARKDOWN РАЗМЕТКУ
         return (
             f"{name} {region_emoji}\n\n"
             f"🏛️ Столица: {capital}\n"
@@ -55,6 +55,9 @@ def format_country_info(data: Dict) -> str:
 
 def build_top_df(all_countries: List[Dict]) -> pd.DataFrame:
     rows = []
+    if not all_countries:
+        return pd.DataFrame(columns=["name", "population", "area"])
+
     for c in all_countries:
         try:
             rows.append({
@@ -64,4 +67,8 @@ def build_top_df(all_countries: List[Dict]) -> pd.DataFrame:
             })
         except Exception:
             continue
+
+    if not rows:
+        return pd.DataFrame(columns=["name", "population", "area"])
+
     return pd.DataFrame(rows)
