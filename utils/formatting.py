@@ -4,6 +4,7 @@ from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
+
 def format_country_info(data: Dict) -> str:
     try:
         name = data.get("name", {}).get("common", "—")
@@ -12,25 +13,44 @@ def format_country_info(data: Dict) -> str:
         area = data.get("area", "—")
         region = data.get("region", "—")
         subregion = data.get("subregion", "—")
-        languages = ", ".join((data.get("languages") or {}).values()) or "—"
+
+        # Языки
+        languages_dict = data.get("languages") or {}
+        languages = ", ".join(languages_dict.values()) if languages_dict else "—"
+
+        # Валюты
+        currencies_dict = data.get("currencies") or {}
         currencies = ", ".join(
-            f"{v.get('name')} ({k})" for k, v in (data.get("currencies") or {}).items()
-        ) or "—"
+            f"{v.get('name')} ({k})" for k, v in currencies_dict.items()
+        ) if currencies_dict else "—"
+
+        # Флаг
         flag = data.get("flags", {}).get("png", "")
 
+        # Эмодзи для регионов
+        region_emojis = {
+            "Africa": "🌍",
+            "Americas": "🌎",
+            "Asia": "🌏",
+            "Europe": "🇪🇺",
+            "Oceania": "🌊"
+        }
+        region_emoji = region_emojis.get(region, "📍")
+
+        # УБРАЛИ ВСЕ ЗВЕЗДОЧКИ (*) И MARKDOWN РАЗМЕТКУ
         return (
-            f"{name}\n"
-            f"• Столица: {capital}\n"
-            f"• Регион: {region} / {subregion}\n"
-            f"• Население: {population:_}\n"
-            f"• Площадь: {area:_} км²\n"
-            f"• Валюты: {currencies}\n"
-            f"• Языки: {languages}\n"
-            f"Флаг: {flag}"
+            f"{name} {region_emoji}\n\n"
+            f"🏛️ Столица: {capital}\n"
+            f"🗺️ Регион: {region} / {subregion}\n"
+            f"👥 Население: {population:_}\n"
+            f"📏 Площадь: {area:_} км²\n"
+            f"💰 Валюты: {currencies}\n"
+            f"🗣️ Языки: {languages}\n"
+            f"🏳️ Флаг: {flag}"
         )
     except Exception as e:
         logger.error("Ошибка форматирования страны: %s", e)
-        return "Ошибка при форматировании данных."
+        return "❌ Ошибка при получении данных о стране."
 
 
 def build_top_df(all_countries: List[Dict]) -> pd.DataFrame:
