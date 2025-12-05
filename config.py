@@ -1,18 +1,24 @@
 import os
 from dotenv import load_dotenv
 
-# Явно указываем путь к .env (лежит в корне проекта)
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-load_dotenv(dotenv_path)
+# Загружаем переменные окружения из файла .env
+load_dotenv()
 
+# --- ОСНОВНЫЕ НАСТРОЙКИ ---
+# Токен берется из файла .env (TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН)
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 if not BOT_TOKEN:
-    raise ValueError(
-        "TELEGRAM_BOT_TOKEN не задан! "
-        "Установите переменную окружения или создайте .env файл."
-    )
+    print("ОШИБКА: Токен бота не найден в файле .env!")
+    exit(1)
 
-PREFS_FILE = "user_prefs.json"
-RESTCOUNTRIES_NAME_ENDPOINT = "https://restcountries.com/v3.1/name/{}"
-RESTCOUNTRIES_ALL_ENDPOINT = "https://restcountries.com/v3.1/all"
+# --- ПУТИ К ФАЙЛАМ ДАННЫХ ---
+# Используем os.path.join для создания путей, чтобы код работал на любой ОС
+
+# Путь к файлу для хранения настроек пользователей (используется в services/prefs.py)
+PREFS_FILE = os.path.join(os.getcwd(), 'data', "user_prefs.json")
+
+# Файл для локального кэша стран (используется в services/restcountries.py, хотя там
+# вы жестко прописали "countries_data.json", мы используем его имя для ясности)
+# Примечание: В вашем restcountries.py используется локальная переменная LOCAL_DATA_FILE = "countries_data.json"
+# Этот файл должен лежать в корне проекта.
