@@ -19,14 +19,14 @@ def format_country_info(data: Dict) -> str:
         flag = data.get("flags", {}).get("png", "")
 
         return (
-            f"*{name}*\n"
-            f"• Столица: _{capital}_\n"
-            f"• Регион: _{region} / {subregion}_\n"
-            f"• Население: _{population:_}_\n"
-            f"• Площадь: _{area:_} км²\n"
+            f"{name}\n"
+            f"• Столица: {capital}\n"
+            f"• Регион: {region} / {subregion}\n"
+            f"• Население: {population:_}\n"
+            f"• Площадь: {area:_} км²\n"
             f"• Валюты: {currencies}\n"
             f"• Языки: {languages}\n"
-            f"[Флаг]({flag})"
+            f"Флаг: {flag}"
         )
     except Exception as e:
         logger.error("Ошибка форматирования страны: %s", e)

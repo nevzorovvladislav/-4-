@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, ParseMode
+from telegram import Update
 from telegram.ext import CallbackContext
 
 from services.restcountries import fetch_country_by_name, fetch_all_countries
@@ -13,11 +13,15 @@ def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Привет! Я бот стран.\n"
         "Команды:\n"
-        "/info <страна>\n"
-        "/compare <A> | <B>\n"
-        "/top <population|area> <N>\n"
-        "/setpref <key> <value>\n"
-        "/myprefs"
+        "/info <страна> - информация о стране\n"
+        "/compare <A> | <B> - сравнить две страны\n"
+        "/top <population|area> <N> - топ стран\n"
+        "/setpref <key> <value> - сохранить настройку\n"
+        "/myprefs - показать мои настройки\n\n"
+        "Примеры:\n"
+        "/info Russia\n"
+        "/compare Germany | France\n"
+        "/top population 5"
     )
 
 
@@ -36,7 +40,6 @@ def info_cmd(update: Update, context: CallbackContext) -> None:
 
     update.message.reply_text(
         format_country_info(data),
-        parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=False
     )
 
@@ -64,11 +67,11 @@ def compare_cmd(update: Update, context: CallbackContext) -> None:
     area2 = c2.get("area", 0)
 
     msg = (
-        f"*Сравнение {name1} и {name2}*\n"
+        f"Сравнение {name1} и {name2}\n"
         f"• Население: {pop1:_} vs {pop2:_}\n"
         f"• Площадь: {area1:_} vs {area2:_}"
     )
-    update.message.reply_text(msg, parse_mode=ParseMode.MARKDOWN)
+    update.message.reply_text(msg)
 
 
 def top_cmd(update: Update, context: CallbackContext) -> None:
@@ -95,11 +98,11 @@ def top_cmd(update: Update, context: CallbackContext) -> None:
     df = build_top_df(all_c)
     df = df.sort_values(by=metric, ascending=False).head(n)
 
-    text = f"*Топ {n} по {metric}*\n"
+    text = f"Топ {n} по {metric}\n"
     for _, row in df.iterrows():
         text += f"{row['name']}: {row[metric]:_}\n"
 
-    update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
+    update.message.reply_text(text)
 
 
 def setpref_cmd(update: Update, context: CallbackContext) -> None:
