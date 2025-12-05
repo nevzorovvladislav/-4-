@@ -1,7 +1,11 @@
 import os
+from dotenv import load_dotenv
 
-# Загружаем токен из переменной окружения
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+# Явно указываем путь к .env (лежит в корне проекта)
+dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
+load_dotenv(dotenv_path)
+
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 if not BOT_TOKEN:
     raise ValueError(
