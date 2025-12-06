@@ -1,15 +1,17 @@
 import logging
 from typing import Optional, List, Dict
-import requests
+import requests  # <-- ВАЖНО: Нужен для API-запросов
 import json
 import os
 
 logger = logging.getLogger(__name__)
 
+# Файлы данных
 LOCAL_DATA_FILE = "countries_data.json"
 BUILTIN_DATA_FILE = "builtin_countries.json"
 
 
+# --- Функции ввода/вывода данных ---
 
 def get_builtin_countries():
     """Загружает встроенные страны из JSON файла (резерв)."""
@@ -58,8 +60,7 @@ def save_local_countries(countries):
 # --- ФУНКЦИЯ ДЛЯ РАБОТЫ С API ---
 
 def fetch_all_countries_from_api() -> Optional[List[Dict]]:
-    """Загружает полный список стран со всеми данными через REST Countries API."""
-    # Используем 'v3.1/all' для получения полного списка
+    """Загружает полный список стран для топа через REST Countries API."""
     url = "https://restcountries.com/v3.1/all"
     headers = {
         'User-Agent': 'TelegramBot/1.0',
@@ -68,7 +69,6 @@ def fetch_all_countries_from_api() -> Optional[List[Dict]]:
 
     try:
         logger.info("Попытка загрузить полный список стран через API...")
-        # Увеличиваем таймаут на случай медленного ответа
         response = requests.get(url, headers=headers, timeout=20)
 
         if response.status_code == 200:
@@ -88,22 +88,28 @@ def fetch_all_countries_from_api() -> Optional[List[Dict]]:
         return None
 
 
-# --- ГЛАВНАЯ ФУНКЦИЯ ПОЛУЧЕНИЯ ДАННЫХ ---
+# --- ГЛАВНАЯ ФУНКЦИЯ ПОИСКА СТРАНЫ ---
 
 def fetch_country_by_name(name: str) -> Optional[Dict]:
-    """Получить информацию о стране по имени (используется только локальный/встроенный список)."""
-    # Логика поиска по имени остается локальной, чтобы не вызывать API для каждой команды /info.
+    """
+    Получить информацию о стране по имени:
+    1. Поиск в локальном кэше.
+    2. Поиск во встроенном резерве.
+    3. Поиск через API (только если не найдено локально).
+    """
     try:
         if not name or not name.strip():
             logger.warning("Пустое название страны")
             return None
 
         name = name.strip()
-        all_countries = load_local_countries()
 
+        # 1. Поиск в локальных данных (кэш и резерв)
+        all_countries = load_local_countries()
         if not all_countries:
             all_countries = get_builtin_countries()
 
+        # Ищем в локальных/встроенных данных
         if all_countries:
             for country in all_countries:
                 country_name = country.get("name", {}).get("common", "").lower()
@@ -111,7 +117,27 @@ def fetch_country_by_name(name: str) -> Optional[Dict]:
                     logger.info(f"Страна '{name}' найдена в локальных данных")
                     return country
 
-        logger.warning(f"Страна '{name}' не найдена в локальном списке")
+        # 2. Если не найдено локально, обращаемся к API (НОВОЕ ИЗМЕНЕНИЕ)
+        logger.info(f"Страна '{name}' не найдена локально. Поиск через API...")
+        url = f"https://restcountries.com/v3.1/name/{name}?fullText=true"
+        headers = {'User-Agent': 'TelegramBot/1.0', 'Accept': 'application/json'}
+
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code == 200:
+                data = response.json()
+                if isinstance(data, list) and len(data) > 0:
+                    logger.info(f"Страна '{name}' найдена через API.")
+                    # Возвращаем первый результат
+                    return data[0]
+
+            # Если статус 404 (Not Found) или другой
+            logger.warning(f"API не нашел страну '{name}'. Статус: {response.status_code}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Ошибка сети при поиске '{name}' через API: {e}")
+
+        logger.warning(f"Страна '{name}' не найдена ни в одном источнике.")
         return None
 
     except Exception as e:
@@ -119,19 +145,20 @@ def fetch_country_by_name(name: str) -> Optional[Dict]:
         return None
 
 
+# --- ФУНКЦИЯ ДЛЯ ТОПА (ОСТАЛАСЬ БЕЗ ИЗМЕНЕНИЙ) ---
+
 def fetch_all_countries() -> Optional[List[Dict]]:
     """
     Получить список всех стран для топа:
-    1. API (если успешно) -> сохраняется в кэш.
-    2. Локальный кэш (если API не сработал).
-    3. Встроенный список (если нет ни API, ни кэша).
+    1. API -> сохраняется в кэш.
+    2. Локальный кэш.
+    3. Встроенный список.
     """
     logger.info("Получение списка стран для топа...")
 
-    # 1. Сначала пробуем получить данные из API (приоритет свежим данным)
+    # 1. Сначала пробуем получить данные из API
     api_data = fetch_all_countries_from_api()
     if api_data:
-        # Успешно, сохраняем в локальный файл для кэша
         save_local_countries(api_data)
         logger.info("Используем полный список, полученный из API.")
         return api_data
@@ -139,15 +166,14 @@ def fetch_all_countries() -> Optional[List[Dict]]:
     # 2. Если API недоступен, пробуем загрузить из локального файла (кэша)
     logger.warning("API недоступен. Пробуем использовать локальный кэш...")
     local_data = load_local_countries()
-    if local_data and len(local_data) >= 50:  # Используем кэш, если он достаточно полон
+    if local_data:
         logger.info(f"Используем локальный кэш: {len(local_data)} стран")
         return local_data
 
     # 3. Если нет ни API, ни кэша, используем встроенный резерв
-    logger.error("Локальный кэш также недоступен/неполон. Используем встроенный резервный список.")
+    logger.error("Локальный кэш также недоступен. Используем встроенный резервный список.")
     builtin_countries = get_builtin_countries()
 
-    # Сохраняем встроенные данные в локальный файл (для кэширования резерва)
     if builtin_countries:
         save_local_countries(builtin_countries)
 
