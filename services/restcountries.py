@@ -1,17 +1,15 @@
 import logging
 from typing import Optional, List, Dict
-import requests  # <-- ВОЗВРАЩАЕМ ИМПОРТ ДЛЯ РАБОТЫ С API
+import requests
 import json
 import os
 
 logger = logging.getLogger(__name__)
 
-# Файлы данных
 LOCAL_DATA_FILE = "countries_data.json"
-BUILTIN_DATA_FILE = "builtin_countries.json"  # Предполагаем, что этот файл существует
+BUILTIN_DATA_FILE = "builtin_countries.json"
 
 
-# --- Функции ввода/вывода данных ---
 
 def get_builtin_countries():
     """Загружает встроенные страны из JSON файла (резерв)."""
